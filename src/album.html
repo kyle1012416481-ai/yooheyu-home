@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>时光相册</title>
+  <style>
+    :root {
+      --purple: #a78bfa;
+      --pink: #f472b6;
+      --blue: #60a5fa;
+      --glass: rgba(255,255,255,0.06);
+      --glass-border: rgba(255,255,255,0.1);
+      --text: #f0f0f0;
+      --text-dim: #9898b0;
+      --danger: #f87171;
+      --radius: 12px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow-x: hidden;
+    }
+    button { font-family: inherit; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+
+    /* Login */
+    #login-view {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .login-card {
+      background: var(--glass);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 3rem 2.5rem;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+    .login-icon {
+      width: 56px; height: 56px;
+      margin: 0 auto 1.25rem;
+      opacity: 0.7;
+    }
+    .login-icon svg { width: 100%; height: 100%; }
+    .login-card h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--purple), var(--pink), var(--blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.4rem;
+    }
+    .login-card p {
+      color: var(--text-dim);
+      font-size: 0.875rem;
+      margin-bottom: 2rem;
+    }
+    .login-input {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .login-input:focus { border-color: var(--purple); }
+    .login-input::placeholder { color: rgba(255,255,255,0.25); }
+    .login-btn {
+      width: 100%;
+      padding: 0.8rem;
+      margin-top: 1rem;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .login-btn:hover { opacity: 0.9; }
+    .login-btn:active { transform: scale(0.98); }
+    .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .login-error {
+      color: var(--danger);
+      font-size: 0.85rem;
+      margin-top: 0.75rem;
+      min-height: 1.25em;
+    }
+
+    /* Header */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(15, 12, 41, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+      padding: 0.875rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--purple), var(--pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .header-actions { display: flex; gap: 0.6rem; }
+    .btn {
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .btn svg { width: 15px; height: 15px; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      color: white;
+    }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--glass-border);
+    }
+    .btn-ghost:hover { background: var(--glass); color: var(--text); }
+    .btn-icon {
+      width: 36px; height: 36px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-icon:hover { background: rgba(255,255,255,0.12); color: var(--text); }
+    .btn-icon svg { width: 18px; height: 18px; }
+
+    /* Gallery */
+    .gallery {
+      padding: 1.5rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .month-section { margin-bottom: 2rem; }
+    .month-header {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .month-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--purple);
+      flex-shrink: 0;
+    }
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 0.6rem;
+    }
+    .photo-card {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      background: rgba(255,255,255,0.03);
+    }
+    .photo-card:hover {
+      transform: scale(1.04);
+      box-shadow: 0 8px 30px rgba(167, 139, 250, 0.15);
+    }
+    .photo-card img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: opacity 0.3s;
+    }
+    .photo-card img[src=""] { opacity: 0; }
+    .photo-overlay {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 1.75rem 0.6rem 0.45rem;
+      background: linear-gradient(transparent, rgba(0,0,0,0.6));
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.8);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .photo-card:hover .photo-overlay { opacity: 1; }
+
+    /* Lightbox */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.96);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    .lightbox.active { display: flex; }
+    .lightbox-img-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 3.5rem 3rem;
+      min-height: 0;
+    }
+    .lightbox-img-wrap img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 4px;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+    .lightbox-close {
+      position: absolute;
+      top: 0.75rem; right: 0.75rem;
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 1.25rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      z-index: 10;
+    }
+    .lightbox-close:hover { background: rgba(255,255,255,0.2); }
+    .lightbox-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.08);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 1.25rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      z-index: 10;
+    }
+    .lightbox-nav:hover { background: rgba(255,255,255,0.18); }
+    .lightbox-nav.disabled { opacity: 0.2; pointer-events: none; }
+    .lightbox-prev { left: 0.75rem; }
+    .lightbox-next { right: 0.75rem; }
+    .lightbox-bar {
+      width: 100%;
+      padding: 0.6rem 1rem;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.7);
+      flex-shrink: 0;
+    }
+    .lightbox-delete {
+      padding: 0.35rem 0.7rem;
+      background: transparent;
+      border: 1px solid rgba(248,113,113,0.4);
+      border-radius: 6px;
+      color: var(--danger);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex; align-items: center; gap: 0.3rem;
+    }
+    .lightbox-delete:hover { background: rgba(248,113,113,0.15); }
+    .lightbox-delete svg { width: 13px; height: 13px; }
+
+    /* Upload modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: #1c1838;
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      width: 100%;
+      max-width: 480px;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    .modal h2 {
+      font-size: 1.1rem;
+      margin-bottom: 1.25rem;
+    }
+    .drop-zone {
+      border: 2px dashed rgba(255,255,255,0.15);
+      border-radius: var(--radius);
+      padding: 2.5rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+      border-color: var(--purple);
+      background: rgba(167, 139, 250, 0.08);
+    }
+    .drop-zone svg { width: 40px; height: 40px; opacity: 0.4; margin-bottom: 0.75rem; }
+    .drop-zone p { color: var(--text-dim); font-size: 0.85rem; }
+    .drop-zone .hint { font-size: 0.75rem; margin-top: 0.4rem; opacity: 0.5; }
+    .file-previews {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+      gap: 0.4rem;
+      margin-top: 1rem;
+    }
+    .file-previews:empty { display: none; }
+    .preview-item {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+    }
+    .preview-item img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    .preview-remove {
+      position: absolute;
+      top: 3px; right: 3px;
+      width: 20px; height: 20px;
+      background: rgba(0,0,0,0.6);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 0.7rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .file-stats {
+      margin-top: 0.75rem;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .file-stats:empty { display: none; }
+    .file-stats .saved { color: #34d399; }
+    .modal-actions {
+      display: flex;
+      gap: 0.6rem;
+      margin-top: 1.25rem;
+      justify-content: flex-end;
+    }
+    .upload-status {
+      margin-top: 1rem;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+    .progress-bar {
+      height: 4px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--purple), var(--pink));
+      border-radius: 2px;
+      transition: width 0.3s;
+      width: 0%;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 5rem 1rem;
+    }
+    .empty-state svg { width: 72px; height: 72px; opacity: 0.2; margin-bottom: 1rem; }
+    .empty-state h3 { color: var(--text-dim); font-size: 1rem; font-weight: 500; margin-bottom: 0.4rem; }
+    .empty-state p { color: rgba(255,255,255,0.3); font-size: 0.85rem; }
+
+    /* Loading */
+    .loading { text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.85rem; }
+    .spinner {
+      display: inline-block;
+      width: 20px; height: 20px;
+      border: 2px solid rgba(255,255,255,0.1);
+      border-top-color: var(--purple);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 0.5rem;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #2d2850;
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      padding: 0.6rem 1.2rem;
+      font-size: 0.85rem;
+      color: var(--text);
+      z-index: 2000;
+      transition: transform 0.3s ease;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.error { border-color: rgba(248,113,113,0.4); }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .photo-grid { grid-template-columns: repeat(3, 1fr); gap: 3px; }
+      .photo-card { border-radius: 4px; }
+      .photo-overlay { display: none; }
+      .header { padding: 0.7rem 1rem; }
+      .header h1 { font-size: 1rem; }
+      .gallery { padding: 0; }
+      .month-section { margin-bottom: 1rem; }
+      .month-header { padding: 0.6rem 1rem 0.4rem; margin-bottom: 0; font-size: 0.8rem; border: none; }
+      .lightbox-nav { width: 36px; height: 36px; }
+      .lightbox-img-wrap { padding: 3rem 0.5rem; }
+      .modal { margin: 0.5rem; padding: 1.25rem; }
+    }
+    @media (min-width: 1200px) {
+      .photo-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Login View -->
+<div id="login-view">
+  <div class="login-card">
+    <div class="login-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2"/>
+        <circle cx="8.5" cy="8.5" r="1.5"/>
+        <path d="M21 15l-5-5L5 21"/>
+      </svg>
+    </div>
+    <h1>时光相册</h1>
+    <p>输入密码以查看私密相册</p>
+    <form id="login-form">
+      <input type="password" class="login-input" id="password-input" placeholder="请输入密码" autocomplete="current-password">
+      <button type="submit" class="login-btn" id="login-btn">进入相册</button>
+      <div class="login-error" id="login-error"></div>
+    </form>
+  </div>
+</div>
+
+<!-- Gallery View -->
+<div id="gallery-view" style="display:none">
+  <header class="header">
+    <h1>时光相册</h1>
+    <div class="header-actions">
+      <button class="btn btn-primary" id="upload-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        上传
+      </button>
+      <button class="btn btn-ghost" id="logout-btn">退出</button>
+    </div>
+  </header>
+  <main class="gallery" id="gallery">
+    <div class="loading"><span class="spinner"></span>加载中...</div>
+  </main>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightbox-close">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+  <button class="lightbox-nav lightbox-prev" id="lightbox-prev">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <button class="lightbox-nav lightbox-next" id="lightbox-next">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+  </button>
+  <div class="lightbox-img-wrap">
+    <img id="lightbox-img" src="" alt="" draggable="false">
+  </div>
+  <div class="lightbox-bar">
+    <span id="lightbox-info"></span>
+    <button class="lightbox-delete" id="lightbox-delete">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+      删除
+    </button>
+  </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="modal-overlay" id="upload-modal">
+  <div class="modal">
+    <h2>上传照片</h2>
+    <div class="drop-zone" id="drop-zone">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      <p>点击选择或拖拽照片到这里</p>
+      <p class="hint">支持 JPG、PNG、GIF、WebP 格式 · 上传时自动压缩</p>
+    </div>
+    <input type="file" id="file-input" accept="image/*" multiple hidden>
+    <div class="file-previews" id="file-previews"></div>
+    <div class="file-stats" id="file-stats"></div>
+    <div class="upload-status" id="upload-status" style="display:none">
+      <span id="upload-text">上传中...</span>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="upload-cancel">取消</button>
+      <button class="btn btn-primary" id="upload-confirm" disabled>开始上传</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+(function() {
+  'use strict';
+
+  let photos = [];
+  let currentIndex = -1;
+  let selectedFiles = [];
+  let uploading = false;
+
+  const $ = (s) => document.getElementById(s);
+  const loginView = $('login-view');
+  const galleryView = $('gallery-view');
+  const galleryEl = $('gallery');
+  const lightbox = $('lightbox');
+  const lightboxImg = $('lightbox-img');
+  const lightboxInfo = $('lightbox-info');
+  const uploadModal = $('upload-modal');
+  const filePreviews = $('file-previews');
+  const progressFill = $('progress-fill');
+  const uploadStatus = $('upload-status');
+  const uploadText = $('upload-text');
+  const uploadConfirm = $('upload-confirm');
+  const toastEl = $('toast');
+
+  // -- Toast --
+  let toastTimer;
+  function toast(msg, isError) {
+    clearTimeout(toastTimer);
+    toastEl.textContent = msg;
+    toastEl.className = 'toast' + (isError ? ' error' : '');
+    requestAnimationFrame(() => toastEl.classList.add('show'));
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), msg.length > 20 ? 4000 : 2500);
+  }
+
+  // -- Auth --
+  async function checkAuth() {
+    try {
+      const res = await fetch('/api/photos');
+      return res.ok;
+    } catch { return false; }
+  }
+
+  async function login(password) {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || '密码错误');
+    }
+  }
+
+  async function logout() {
+    await fetch('/api/logout', { method: 'POST' });
+    photos = [];
+    loginView.style.display = '';
+    galleryView.style.display = 'none';
+    $('password-input').value = '';
+  }
+
+  // -- Photos --
+  async function loadPhotos() {
+    galleryEl.innerHTML = '<div class="loading"><span class="spinner"></span>加载中...</div>';
+    try {
+      const res = await fetch('/api/photos');
+      if (!res.ok) throw new Error('加载失败');
+      const data = await res.json();
+      photos = data.photos || [];
+      renderGallery();
+    } catch (e) {
+      galleryEl.innerHTML = '<div class="empty-state"><h3>加载失败</h3><p>' + e.message + '</p></div>';
+    }
+  }
+
+  function renderGallery() {
+    if (photos.length === 0) {
+      galleryEl.innerHTML =
+        '<div class="empty-state">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
+            '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>' +
+          '</svg>' +
+          '<h3>还没有照片</h3>' +
+          '<p>点击上方「上传」按钮添加第一张照片</p>' +
+        '</div>';
+      return;
+    }
+
+    const groups = {};
+    for (const p of photos) {
+      const key = (p.date || '').substring(0, 7) || 'unknown';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(p);
+    }
+
+    const months = Object.keys(groups).sort().reverse();
+    const monthNames = ['1','2','3','4','5','6','7','8','9','10','11','12'];
+    let html = '';
+
+    for (const m of months) {
+      let label = m;
+      if (m !== 'unknown') {
+        const [y, mo] = m.split('-');
+        label = y + ' 年 ' + parseInt(mo) + ' 月';
+      }
+      html += '<div class="month-section"><h2 class="month-header"><span class="month-dot"></span>' + label + '</h2><div class="photo-grid">';
+      for (const p of groups[m]) {
+        const idx = photos.indexOf(p);
+        html += '<div class="photo-card" data-index="' + idx + '">' +
+          '<img src="/api/thumb/' + encodeURIComponent(p.id) + '" loading="lazy" alt="">' +
+          '<div class="photo-overlay">' + (p.date || '') + '</div>' +
+          '</div>';
+      }
+      html += '</div></div>';
+    }
+
+    galleryEl.innerHTML = html;
+
+    galleryEl.querySelectorAll('.photo-card').forEach(card => {
+      card.addEventListener('click', () => openLightbox(parseInt(card.dataset.index)));
+    });
+  }
+
+  // -- Lightbox --
+  function openLightbox(index) {
+    if (index < 0 || index >= photos.length) return;
+    currentIndex = index;
+    const photo = photos[index];
+    lightboxImg.src = '/api/photo/' + encodeURIComponent(photo.id);
+    lightboxInfo.textContent = (photo.date || '') + (photo.originalName ? '  ·  ' + photo.originalName : '');
+    $('lightbox-prev').classList.toggle('disabled', index === 0);
+    $('lightbox-next').classList.toggle('disabled', index === photos.length - 1);
+    lightbox.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove('active');
+    lightboxImg.src = '';
+    document.body.style.overflow = '';
+    currentIndex = -1;
+  }
+
+  function navLightbox(delta) {
+    const next = currentIndex + delta;
+    if (next >= 0 && next < photos.length) openLightbox(next);
+  }
+
+  async function deleteCurrentPhoto() {
+    if (currentIndex < 0) return;
+    const photo = photos[currentIndex];
+    if (!confirm('确定要删除这张照片吗？此操作不可恢复。')) return;
+    try {
+      const res = await fetch('/api/photo/' + encodeURIComponent(photo.id), { method: 'DELETE' });
+      if (!res.ok) throw new Error('删除失败');
+      photos.splice(currentIndex, 1);
+      closeLightbox();
+      renderGallery();
+      toast('已删除');
+    } catch (e) {
+      toast(e.message, true);
+    }
+  }
+
+  // Touch swipe for lightbox
+  let touchStartX = 0;
+  lightbox.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  lightbox.addEventListener('touchend', (e) => {
+    const diff = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(diff) > 60) navLightbox(diff > 0 ? -1 : 1);
+  });
+
+  // -- Upload --
+  function openUploadModal() {
+    selectedFiles = [];
+    $('file-input').value = '';
+    filePreviews.innerHTML = '';
+    $('file-stats').innerHTML = '';
+    uploadStatus.style.display = 'none';
+    uploadConfirm.disabled = true;
+    uploadConfirm.textContent = '开始上传';
+    uploadModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeUploadModal() {
+    if (uploading) return;
+    uploadModal.classList.remove('active');
+    document.body.style.overflow = '';
+    selectedFiles = [];
+  }
+
+  function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+  }
+
+  function updateFileStats() {
+    const statsEl = $('file-stats');
+    if (selectedFiles.length === 0) { statsEl.innerHTML = ''; return; }
+    const total = selectedFiles.reduce((s, f) => s + f.size, 0);
+    statsEl.innerHTML = selectedFiles.length + ' 张照片，原始大小 ' + formatSize(total) + '（上传时将自动压缩）';
+  }
+
+  function addFiles(fileList) {
+    const accepted = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
+    for (const f of fileList) {
+      if (f.type && !accepted.includes(f.type) && !f.name.match(/\.(jpe?g|png|gif|webp|heic|heif)$/i)) continue;
+      if (selectedFiles.some(s => s.name === f.name && s.size === f.size)) continue;
+      selectedFiles.push(f);
+    }
+    renderPreviews();
+    updateFileStats();
+    uploadConfirm.disabled = selectedFiles.length === 0;
+  }
+
+  function removeFile(index) {
+    selectedFiles.splice(index, 1);
+    renderPreviews();
+    updateFileStats();
+    uploadConfirm.disabled = selectedFiles.length === 0;
+  }
+
+  function renderPreviews() {
+    filePreviews.innerHTML = '';
+    selectedFiles.forEach((f, i) => {
+      const div = document.createElement('div');
+      div.className = 'preview-item';
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(f);
+      img.onload = () => URL.revokeObjectURL(img.src);
+      const btn = document.createElement('button');
+      btn.className = 'preview-remove';
+      btn.innerHTML = '&times;';
+      btn.onclick = (e) => { e.stopPropagation(); removeFile(i); };
+      div.appendChild(img);
+      div.appendChild(btn);
+      filePreviews.appendChild(div);
+    });
+  }
+
+  function resizeImageToBlob(file, maxDim, quality, outputType) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > maxDim || h > maxDim) {
+          const scale = Math.min(maxDim / w, maxDim / h);
+          w = Math.round(w * scale);
+          h = Math.round(h * scale);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.toBlob((blob) => {
+          URL.revokeObjectURL(url);
+          resolve(blob);
+        }, outputType, quality);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+      img.src = url;
+    });
+  }
+
+  async function compressImage(file) {
+    const isGif = file.type === 'image/gif';
+    if (isGif) return file;
+    return await resizeImageToBlob(file, 2000, 0.85, 'image/jpeg') || file;
+  }
+
+  async function generateThumbnail(file) {
+    return resizeImageToBlob(file, 400, 0.75, 'image/jpeg');
+  }
+
+  function getFileDate(file) {
+    if (file.lastModified) {
+      const d = new Date(file.lastModified);
+      if (!isNaN(d.getTime())) {
+        return d.getFullYear() + '-' +
+          String(d.getMonth() + 1).padStart(2, '0') + '-' +
+          String(d.getDate()).padStart(2, '0');
+      }
+    }
+    return '';
+  }
+
+  async function doUpload() {
+    if (selectedFiles.length === 0 || uploading) return;
+    uploading = true;
+    uploadConfirm.disabled = true;
+    uploadStatus.style.display = '';
+    const total = selectedFiles.length;
+    let done = 0;
+    let failed = 0;
+    let totalOriginal = 0;
+    let totalCompressed = 0;
+
+    for (const file of [...selectedFiles]) {
+      uploadText.textContent = '压缩并上传 (' + (done + 1) + '/' + total + ')...';
+      progressFill.style.width = (done / total * 100) + '%';
+
+      try {
+        const compressed = await compressImage(file);
+        const thumb = await generateThumbnail(file);
+        totalOriginal += file.size;
+        totalCompressed += compressed.size;
+
+        const formData = new FormData();
+        const ext = compressed === file ? file.name : file.name.replace(/\.[^.]+$/, '.jpg');
+        formData.append('file', compressed, ext);
+        if (thumb) formData.append('thumbnail', thumb, 'thumb.jpg');
+        const date = getFileDate(file);
+        if (date) formData.append('date', date);
+
+        const res = await fetch('/api/upload', { method: 'POST', body: formData });
+        if (!res.ok) throw new Error();
+        const photo = await res.json();
+        photos.unshift(photo);
+      } catch {
+        failed++;
+      }
+      done++;
+    }
+
+    progressFill.style.width = '100%';
+    uploading = false;
+    selectedFiles = [];
+    const saved = totalOriginal - totalCompressed;
+    const pct = totalOriginal > 0 ? Math.round(saved / totalOriginal * 100) : 0;
+
+    setTimeout(() => {
+      closeUploadModal();
+      renderGallery();
+      document.body.style.overflow = '';
+      const savedMsg = pct > 0 ? '，节省 ' + pct + '%（' + formatSize(saved) + '）' : '';
+      if (failed > 0) {
+        toast((done - failed) + ' 张上传成功，' + failed + ' 张失败', true);
+      } else {
+        toast(done + ' 张照片上传成功' + savedMsg);
+      }
+    }, 300);
+  }
+
+  // -- Drop zone events --
+  const dropZone = $('drop-zone');
+  const fileInput = $('file-input');
+
+  dropZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => addFiles(fileInput.files));
+
+  dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    addFiles(e.dataTransfer.files);
+  });
+
+  // -- Event listeners --
+  $('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const pwd = $('password-input').value;
+    if (!pwd) return;
+    const btn = $('login-btn');
+    const errEl = $('login-error');
+    btn.disabled = true;
+    btn.textContent = '验证中...';
+    errEl.textContent = '';
+    try {
+      await login(pwd);
+      loginView.style.display = 'none';
+      galleryView.style.display = '';
+      await loadPhotos();
+    } catch (err) {
+      errEl.textContent = err.message;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '进入相册';
+    }
+  });
+
+  $('logout-btn').addEventListener('click', logout);
+  $('upload-btn').addEventListener('click', openUploadModal);
+  $('upload-cancel').addEventListener('click', closeUploadModal);
+  $('upload-confirm').addEventListener('click', doUpload);
+  $('lightbox-close').addEventListener('click', closeLightbox);
+  $('lightbox-prev').addEventListener('click', () => navLightbox(-1));
+  $('lightbox-next').addEventListener('click', () => navLightbox(1));
+  $('lightbox-delete').addEventListener('click', deleteCurrentPhoto);
+
+  // Click outside lightbox image to close
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox || e.target.classList.contains('lightbox-img-wrap')) closeLightbox();
+  });
+
+  // Click outside upload modal to close
+  uploadModal.addEventListener('click', (e) => {
+    if (e.target === uploadModal) closeUploadModal();
+  });
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (lightbox.classList.contains('active')) {
+      if (e.key === 'Escape') closeLightbox();
+      else if (e.key === 'ArrowLeft') navLightbox(-1);
+      else if (e.key === 'ArrowRight') navLightbox(1);
+      return;
+    }
+    if (uploadModal.classList.contains('active')) {
+      if (e.key === 'Escape') closeUploadModal();
+      return;
+    }
+  });
+
+  // Paste to upload
+  document.addEventListener('paste', (e) => {
+    if (!uploadModal.classList.contains('active')) return;
+    const files = e.clipboardData?.files;
+    if (files?.length) addFiles(files);
+  });
+
+  // -- Init --
+  (async () => {
+    if (await checkAuth()) {
+      loginView.style.display = 'none';
+      galleryView.style.display = '';
+      await loadPhotos();
+    }
+  })();
+})();
+</script>
+</body>
+</html>
